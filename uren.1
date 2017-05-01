@@ -1,0 +1,151 @@
+.Dd May 1, 2017
+.Dt UREN 1
+.Os
+.Sh NAME
+.Nm uren
+.Nd project time tracking
+.Sh SYNOPSIS
+.Nm
+.Op Fl h
+.Sh DESCRIPTION
+.Nm
+is a project time tracking tool with stopwatch support.
+.Pp 
+.Bl -tag -width Ds
+.It Fl h
+Print usage.
+.El
+.Sh BUILTIN COMMANDS
+The key bindings are vi-like. The following commands are supported:
+.Bl -tag -width bigword -compact -offset 3u
+.Pp
+.It Xo
+.Op Ar count
+.Aq Cm control-F
+.Xc
+Page forward
+.Ar count
+screens.
+.Pp
+.It Xo
+.Op Ar count
+.Aq Cm control-B
+.Xc
+Page backwards
+.Ar count
+screens.
+.Pp
+.It Xo
+.Op Ar count
+.Aq Cm control-D
+.Xc
+Scroll forward
+.Ar count
+half screens.
+.Pp
+.It Xo
+.Op Ar count
+.Aq Cm control-U
+.Xc
+Scroll backwards
+.Ar count
+half screens.
+.Pp
+.It Xo
+.Op Ar count
+.Aq Cm control-E
+.Xc
+Scroll forward
+.Ar count
+lines.
+.Pp
+.It Xo
+.Op Ar count
+.Aq Cm control-Y
+.Xc
+Scroll backwards
+.Ar count
+lines.
+.Pp
+.It Xo
+.Op Ar count
+.Cm j
+.Xc
+Move the cursor down
+.Ar count
+lines.
+.Pp
+.It Xo
+.Op Ar count
+.Cm k
+.Xc
+Move the cursor up
+.Ar count
+lines.
+.Pp
+.Cm gg
+Move to the first page.
+.Pp
+.Cm G
+Move to the last page.
+.Pp
+.It Xo
+.Op Ar count
+.Cm H
+.Xc
+Move to
+.Ar count
+lines from the top of the current screen.
+.Pp
+.It Cm M
+Move to the middle of the current screen.
+.Pp
+.It Xo
+.Op Ar count
+.Cm L
+.Xc
+Move to
+.Ar count
+lines from the bottom of the current screen.
+.Pp
+.It Cm f
+Toggle filter on or off.
+.Pp
+.It Cm i
+Insert a new entry after the last entry.
+.Pp
+.It Cm O
+Insert a new entry before the currently selected line.
+.Pp
+.It Cm I
+Alias for
+.Cm O
+.Pp
+.It Cm o
+Insert a new entry after the currently selected line.
+.Pp
+.It Cm A
+Alias for o.
+.Pp
+.It Cm cc
+Edit the current line.
+.Pp
+.It Cm S
+Alias for cc.
+.Pp
+.It Cm dd
+Delete the current line.
+.Pp
+.It Cm s
+Toggle the stopwatch on or off.
+.Pp
+.It Cm q
+Quit the application.
+.El
+.Pp
+The filter, insert and edit form support TAB-completion for the project name. Subsequent use of TAB scrolls through the list of options.
+.Sh EXIT STATUS
+.Ex -std 
+.Sh AUTHORS
+.An -nosplit
+.An Tim Kuijsten Aq Mt tim@netsend.nl

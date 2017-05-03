@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 
 #include <dirent.h>
-#include <db.h>
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -14,6 +13,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "compat/bdb.h"
 #include "entryl.h"
 #include "shared.h"
 

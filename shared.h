@@ -2,7 +2,6 @@
 #define SHARED_H
 
 #include <ctype.h>
-#include <db.h>
 #include <err.h>
 #include <form.h>
 #include <limits.h>
@@ -13,6 +12,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "compat/bdb.h"
 #include "log.h"
 
 #ifndef PATH_MAX

@@ -8,12 +8,14 @@ static int init_user(user_t *usr);
 int
 main(int argc, char *argv[])
 {
-  struct termios term;
   char datapath[PATH_MAX + 1];
   char idxpath[PATH_MAX + 1];
 
   if (isatty(STDIN_FILENO) == 0)
     log_err(1, "%s: stdin is not connected to a terminal", __func__);
+
+#ifdef VDSUSP
+  struct termios term;
 
   /* enable ^Y */
   if (tcgetattr(STDIN_FILENO, &term) < 0)
@@ -21,6 +23,7 @@ main(int argc, char *argv[])
   term.c_cc[VDSUSP] = _POSIX_VDISABLE;
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) < 0)
     log_err(1, "%s: tcsetattr", __func__);
+#endif
 
   /* make sure MB_CUR_MAX is set */
   if (setlocale(LC_ALL, "") == NULL)

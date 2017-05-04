@@ -414,9 +414,13 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
     case KEY_RIGHT:
       form_driver(form, REQ_RIGHT_CHAR);
       break;
+    case KEY_UP:
+      /* fall through */
     case KEY_BTAB:
       form_driver(form, REQ_PREV_FIELD);
       break;
+    case KEY_DOWN:
+      /* fall through */
     case '\t':
       /* make sure buffer of current field is saved */
       if (form_driver(form, REQ_VALIDATION) != E_OK)
@@ -460,7 +464,7 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
       form_driver(form, REQ_DEL_CHAR);
       break;
     case 127: /* backspace on OS X */
-      /* intentional fall-through */
+      /* fall through */
     case KEY_BACKSPACE:
       form_driver(form, REQ_DEL_PREV);
       break;

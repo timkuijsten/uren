@@ -86,15 +86,16 @@ static DB *idx;
 /*
  * Open a new or existing btree and ensure it contains indices for all files.
  * Initializes local copy of a db and datapath. It is ensured that datapath ends
- * with a trailing "/".
+ * with a trailing "/". Furthermore the file is locked for writing.
  *
  * Return 0 on succes, -1 on error.
  */
 int
 idx_open(char *dp, char *idxpath, int ensure_new)
 {
-  int flags;
+  int fd, flags;
   int created = 0;
+  struct flock lock;
 
   flags = 0 | O_RDWR;
   if (ensure_new)
@@ -132,6 +133,25 @@ idx_open(char *dp, char *idxpath, int ensure_new)
       log_err(1, "%s: dbopen: %s", __func__, idxpath);
     }
   }
+
+  /* and lock it */
+  if ((fd = idx->fd(idx)) == -1)
+    log_err(1, "%s: idx->fd", __func__);
+
+  lock.l_type = F_WRLCK;
+  lock.l_whence = SEEK_SET;
+  lock.l_start = 0;
+  lock.l_len = 0;
+
+  if (fcntl(fd, F_GETLK, &lock) == -1)
+    err(1, "%s: fcntl", __func__);
+
+  if (lock.l_type != F_UNLCK)
+    errx(1, "already started: %d", lock.l_pid);
+
+  lock.l_type = F_WRLCK;
+  if (fcntl(fd, F_SETLK, &lock) == -1)
+    err(1, "%s: fcntl failed to lock db", __func__);
 
   if (created)
     if (walk_datadir(idxpath, idx_put) < 0)

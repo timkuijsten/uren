@@ -380,11 +380,20 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
   ret = LSAVE;
   while (proceed && (key = wgetch(w)) != ERR) {
     switch (key) {
+    case 1: /* ctrl-A */
+      form_driver(form, REQ_BEG_LINE);
+      break;
+    case 5: /* ctrl-E */
+      form_driver(form, REQ_END_LINE);
+      break;
     case KEY_LEFT:
       form_driver(form, REQ_LEFT_CHAR);
       break;
     case KEY_RIGHT:
       form_driver(form, REQ_RIGHT_CHAR);
+      break;
+    case KEY_BTAB:
+      form_driver(form, REQ_PREV_FIELD);
       break;
     case '\t':
       /* make sure buffer of current field is saved */

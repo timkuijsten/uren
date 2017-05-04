@@ -390,7 +390,7 @@ int
 fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
 {
   char countstr[7]; /* null terminated storage of a count */
-  int ret, proceed, key, prevkey;
+  int ret, proceed, key, prevkey, i, j, k, l;
   const char **complo = NULL; /* completion options */
   char *tabval;
   int comploi; /* currently selected option */
@@ -409,10 +409,23 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
       form_driver(form, REQ_END_LINE);
       break;
     case KEY_LEFT:
+      /* if there is no movement, assume beginning of field, go to previous
+         field */
+      getyx(w, i, j);
       form_driver(form, REQ_LEFT_CHAR);
+      getyx(w, k, l);
+      if (i == k && j == l) {
+        form_driver(form, REQ_PREV_FIELD);
+        form_driver(form, REQ_END_LINE);
+      }
       break;
     case KEY_RIGHT:
+      /* if there is no movement, assume end of field, go to next field */
+      getyx(w, i, j);
       form_driver(form, REQ_RIGHT_CHAR);
+      getyx(w, k, l);
+      if (i == k && j == l)
+        form_driver(form, REQ_NEXT_FIELD);
       break;
     case KEY_UP:
       /* fall through */

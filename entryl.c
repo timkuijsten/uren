@@ -434,7 +434,12 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
         form_driver(form, REQ_NEXT_FIELD);
       }
       break;
-    case 127: /* backspace */
+    case KEY_DC:
+      form_driver(form, REQ_DEL_CHAR);
+      break;
+    case 127: /* backspace on OS X */
+      /* intentional fall-through */
+    case KEY_BACKSPACE:
       form_driver(form, REQ_DEL_PREV);
       break;
     case '\n':

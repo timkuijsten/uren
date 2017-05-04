@@ -45,11 +45,14 @@ entryl_str(WINDOW *w, char *dst, size_t dstsize, const char *label, const char *
   ret = fetch(sw, form, fp, tab_proj);
   switch (ret) {
   case LERROR:
+    ret = -1;
+    break;
+  case LCANCEL:
     ret = 1;
     break;
   case LSAVE:
     if (strlcpy(dst, field_buffer(fp, 0), dstsize) > dstsize)
-      ret = 1;
+      ret = -1;
     else
       ret = 0;
     break;
@@ -100,11 +103,14 @@ entryl_date(WINDOW *w, time_t *res, const char *label, time_t def)
   ret = fetch(sw, form, NULL, NULL);
   switch (ret) {
   case LERROR:
+    ret = -1;
+    break;
+  case LCANCEL:
     ret = 1;
     break;
   case LSAVE:
     if (parse_date_field(form_fields(form), res) != 0)
-      ret = 1;
+      ret = -1;
     else
       ret = 0;
     break;
@@ -150,8 +156,14 @@ entryl(entryl_t *el, size_t line, const char *proj, const char **tab_proj, const
     log_errx(1, "%s: newwin", __func__);
 
   /* project */
-  if (entryl_str(w, el->proj, sizeof el->proj, "Project:", proj, tab_proj) != 0)
+  switch (entryl_str(w, el->proj, sizeof el->proj, "Project:", proj, tab_proj)) {
+  case -1:
     log_errx(1, "%s: entryl_str", __func__);
+  case 1:
+    ret = LCANCEL;
+    goto exit;
+  }
+
   if (rtrim(el->proj) == 0) {
     if (proj_opt) {
       el->proj[0] = '\0'; /* erase trailing blanks */
@@ -163,12 +175,22 @@ entryl(entryl_t *el, size_t line, const char *proj, const char **tab_proj, const
   }
 
   /* start date */
-  if (entryl_date(w, &el->start, "Start:", start) == -1)
+  switch (entryl_date(w, &el->start, "Start:", start)) {
+  case -1:
     log_errx(1, "%s: entryl_date start", __func__);
+  case 1:
+    ret = LCANCEL;
+    goto exit;
+  }
 
   /* end date */
-  if (entryl_date(w, &el->end, "End:  ", max(end, el->start)) == -1)
+  switch (entryl_date(w, &el->end, "End:  ", max(end, el->start))) {
+  case -1:
     log_errx(1, "%s: entryl_date end", __func__);
+  case 1:
+    ret = LCANCEL;
+    goto exit;
+  }
 
   if (el->start >= el->end) {
     info_prompt("0 minutes");
@@ -441,6 +463,11 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
       /* intentional fall-through */
     case KEY_BACKSPACE:
       form_driver(form, REQ_DEL_PREV);
+      break;
+    case 27: /* ESC */
+      /* don't save and exit */
+      ret = LCANCEL;
+      proceed = 0;
       break;
     case '\n':
       /* save and exit */

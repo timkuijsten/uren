@@ -102,13 +102,13 @@ idx_open(char *dp, char *idxpath, int ensure_new)
     flags |= O_TRUNC;
 
   if ((datapath.len = strlcpy(datapath.str, dp, PATH_MAX)) > PATH_MAX)
-    log_err(1, "%s strlcpy", __func__);
+    err(1, "%s strlcpy", __func__);
   // ensure trailing "/"
   if (datapath.str[datapath.len] != '\0')
-    log_errx(1, "%s: expected null-byte in datapath", __func__);
+    errx(1, "%s: expected null-byte in datapath", __func__);
   if (datapath.str[datapath.len - 1] != '/') {
     if (datapath.len + 1 >= PATH_MAX)
-      log_errx(1, "%s: datapath too small for trailing '/'", __func__);
+      errx(1, "%s: datapath too small for trailing '/'", __func__);
     // append "/"
     datapath.str[datapath.len++] = '/';
     datapath.str[datapath.len++] = '\0';
@@ -117,26 +117,26 @@ idx_open(char *dp, char *idxpath, int ensure_new)
   /* ensure a data dir exists */
   if (mkdir(datapath.str, 0700) == -1)
     if (errno != EEXIST)
-      log_err(1, "%s: mkdir", __func__);
+      err(1, "%s: mkdir", __func__);
 
   /* save an open descriptor to the datadir */
   if ((datapath.fd = open(datapath.str, O_RDONLY)) == -1)
-    log_err(1, "%s: open", __func__);
+    err(1, "%s: open", __func__);
 
   /* open a btree for writing */
   if ((idx = dbopen(idxpath, flags, 0600, DB_BTREE, NULL)) == NULL) {
     if (errno == ENOENT) { /* retry with O_CREAT */
       if ((idx = dbopen(idxpath, flags | O_CREAT, 0600, DB_BTREE, NULL)) == NULL)
-        log_err(1, "%s: dbopen: %s", __func__, idxpath);
+        err(1, "%s: dbopen: %s", __func__, idxpath);
       created = 1;
     } else {
-      log_err(1, "%s: dbopen: %s", __func__, idxpath);
+      err(1, "%s: dbopen: %s", __func__, idxpath);
     }
   }
 
   /* and lock it */
   if ((fd = idx->fd(idx)) == -1)
-    log_err(1, "%s: idx->fd", __func__);
+    err(1, "%s: idx->fd", __func__);
 
   lock.l_type = F_WRLCK;
   lock.l_whence = SEEK_SET;
@@ -155,7 +155,7 @@ idx_open(char *dp, char *idxpath, int ensure_new)
 
   if (created)
     if (walk_datadir(idxpath, idx_put) < 0)
-      log_errx(1, "%s: can't initialize index", __func__);
+      errx(1, "%s: can't initialize index", __func__);
 
   return 0;
 }
@@ -169,9 +169,9 @@ void
 idx_close(void)
 {
   if (close(datapath.fd) == -1)
-    log_err(1, "%s: close", __func__);
+    err(1, "%s: close", __func__);
   if (idx->close(idx) == -1)
-    log_err(1, "%s: idx->close", __func__);
+    err(1, "%s: idx->close", __func__);
 }
 
 /*
@@ -190,10 +190,10 @@ walk_datadir(char *idxpath, int(*cb)(const char proj[MAXPROJ], char *file, DBT *
 
   /* read all dirs in the directory */
   if ((dir = opendir(datapath.str)) == NULL)
-    log_err(2, "%s: opendir", __func__);
+    err(2, "%s: opendir", __func__);
 
   if ((fd1 = dirfd(dir)) == -1)
-    log_err(1, "%s: dirfd", __func__);
+    err(1, "%s: dirfd", __func__);
 
   /* iterate over data dir, expect project directories */
   while ((direntry = readdir(dir)) != NULL) {
@@ -202,7 +202,7 @@ walk_datadir(char *idxpath, int(*cb)(const char proj[MAXPROJ], char *file, DBT *
       continue;
 
     if ((fd2 = openat(fd1, direntry->d_name, O_RDONLY)) == -1)
-      log_err(1, "%s: openat %s", __func__, direntry->d_name);
+      err(1, "%s: openat %s", __func__, direntry->d_name);
 
     /* open project directory */
     if ((dir2 = fdopendir(fd2)) == NULL) {
@@ -235,17 +235,17 @@ walk_datadir(char *idxpath, int(*cb)(const char proj[MAXPROJ], char *file, DBT *
       }
 
       if (cb(direntry->d_name, file->d_name, NULL, NULL) != 0) {
-        log_warnx("%s: index log_error %s/%s/%s", __func__, datapath.str, direntry->d_name, file->d_name);
+        log_warnx("%s: index error %s/%s/%s", __func__, datapath.str, direntry->d_name, file->d_name);
         continue;
       }
     }
 
     if (closedir(dir2) == -1)
-      log_err(1, "%s: closedir dir2", __func__);
+      err(1, "%s: closedir dir2", __func__);
   }
 
   if (closedir(dir) == -1)
-    log_err(1, "%s: closedir dir", __func__);
+    err(1, "%s: closedir dir", __func__);
 
   return 0;
 }
@@ -638,10 +638,10 @@ timetostr(char *dst, const time_t src, const size_t dstsize)
   }
 
   if ((bd = gmtime(&src)) == NULL)
-    log_err(1, "%s: gmtime %lu", __func__, src);
+    err(1, "%s: gmtime %lu", __func__, src);
 
   if (strftime(dst, dstsize, "%Y%m%dT%H%MZ", bd) == 0)
-    log_errx(1, "%s: strftime: %zu, src %lu", __func__, dstsize, src);
+    errx(1, "%s: strftime: %zu, src %lu", __func__, dstsize, src);
 
   return 0;
 }
@@ -651,9 +651,9 @@ idx_copy_key(const DBT *key)
 {
   DBT *r;
   if ((r = malloc(sizeof(DBT))) == NULL)
-    log_err(1, "%s: malloc", __func__);
+    err(1, "%s: malloc", __func__);
   if ((r->data = malloc(key->size)) == NULL)
-    log_err(1, "%s: malloc data", __func__);
+    err(1, "%s: malloc data", __func__);
   r->size = key->size;
   memcpy(r->data, key->data, key->size);
 
@@ -683,7 +683,7 @@ idx_key_proj(const DBT *key)
   else if (is_p(key))
     return pkey_proj(key);
 
-  log_errx(1, "%s: illegal key", __func__);
+  errx(1, "%s: illegal key", __func__);
 
   return NULL;
 }
@@ -697,7 +697,7 @@ idx_key_start(const DBT *key)
   else if (is_p(key))
     return pkey_start(key);
 
-  log_errx(1, "%s: illegal key", __func__);
+  errx(1, "%s: illegal key", __func__);
 
   return 0;
 }
@@ -711,7 +711,7 @@ idx_key_end(const DBT *key)
   else if (is_p(key))
     return pkey_end(key);
 
-  log_errx(1, "%s: illegal key", __func__);
+  errx(1, "%s: illegal key", __func__);
 
   return 0;
 }
@@ -796,7 +796,7 @@ idx_uniq_proj(void)
   free_uniq_proj();
 
   if (prange_start(&key, keydata, sizeof keydata, "", 0, 0) != 0)
-    log_errx(1, "%s: prange_start", __func__);
+    errx(1, "%s: prange_start", __func__);
 
   while ((r = idx->seq(idx, &key, NULL, R_CURSOR)) == 0) {
     proj_names = realloc(proj_names, (proj_name_next + 1) * sizeof(char *));
@@ -804,10 +804,10 @@ idx_uniq_proj(void)
     proj_names[proj_name_next++] = strdup(name);
 
     if (prange_end(&key, keydata, sizeof keydata, name, strlen(name), 0) != 0)
-      log_errx(1, "%s: prange_end", __func__);
+      errx(1, "%s: prange_end", __func__);
   }
   if (r == -1)
-    log_err(1, "%s: idx->seq set cursor", __func__);
+    err(1, "%s: idx->seq set cursor", __func__);
 
   proj_names = realloc(proj_names, (proj_name_next + 1) * sizeof(char *));
   proj_names[proj_name_next] = NULL;
@@ -986,7 +986,7 @@ idx_iterate(const idx_itopts_t *opts, int (*cb)(DBT *), DBT **last_seen)
     } else {
       skeyp = &skey;
       if (prange_start(&skey, sdata, sizeof sdata, opts->proj, l, opts->minstart) != 0)
-        log_errx(1, "%s: prange_start", __func__);
+        errx(1, "%s: prange_start", __func__);
     }
 
     /* create a max key */
@@ -995,7 +995,7 @@ idx_iterate(const idx_itopts_t *opts, int (*cb)(DBT *), DBT **last_seen)
     } else {
       ekeyp = &ekey;
       if (prange_end(&ekey, edata, sizeof edata, opts->proj, l, opts->maxstart) != 0)
-        log_errx(1, "%s: prange_end", __func__);
+        errx(1, "%s: prange_end", __func__);
     }
   } else {
     /* create a min key */
@@ -1004,7 +1004,7 @@ idx_iterate(const idx_itopts_t *opts, int (*cb)(DBT *), DBT **last_seen)
     } else {
       skeyp = &skey;
       if (drange_start(&skey, sdata, sizeof sdata, opts->minstart) != 0)
-        log_errx(1, "%s: drange_start", __func__);
+        errx(1, "%s: drange_start", __func__);
     }
 
     /* create a max key */
@@ -1013,7 +1013,7 @@ idx_iterate(const idx_itopts_t *opts, int (*cb)(DBT *), DBT **last_seen)
     } else {
       ekeyp = &ekey;
       if (drange_end(&ekey, edata, sizeof edata, opts->maxstart) != 0)
-        log_errx(1, "%s: drange_end", __func__);
+        errx(1, "%s: drange_end", __func__);
     }
   }
 
@@ -1083,7 +1083,7 @@ iterate(const DBT *min, int gte, const DBT *max, int lte, size_t limit, size_t s
   /* ensure the same range is used if any */
   if (min && max && min->size && max->size)
     if (in_drange(min) != in_drange(max))
-      log_errx(1, "%s: min and max are not bound to the same index", __func__);
+      errx(1, "%s: min and max are not bound to the same index", __func__);
 
   /* determine which range */
   if (min && in_prange(min))
@@ -1097,10 +1097,10 @@ iterate(const DBT *min, int gte, const DBT *max, int lte, size_t limit, size_t s
     gte = 1;
     if (d_range) {
       if (drange_start(&keymin, mindata, sizeof mindata, 0) != 0)
-        log_errx(1, "%s: drange_start", __func__);
+        errx(1, "%s: drange_start", __func__);
     } else {
       if (prange_start(&keymin, mindata, sizeof mindata, "", 0, 0) != 0)
-        log_errx(1, "%s: prange_start", __func__);
+        errx(1, "%s: prange_start", __func__);
     }
     min = &keymin;
   }
@@ -1109,16 +1109,16 @@ iterate(const DBT *min, int gte, const DBT *max, int lte, size_t limit, size_t s
     lte = 1;
     if (d_range) {
       if (drange_end(&keymax, maxdata, sizeof maxdata, 0) != 0)
-        log_errx(1, "%s: drange_start", __func__);
+        errx(1, "%s: drange_start", __func__);
     } else {
       if (prange_end(&keymax, maxdata, sizeof maxdata, "", 0, 0) != 0)
-        log_errx(1, "%s: prange_end", __func__);
+        errx(1, "%s: prange_end", __func__);
     }
     max = &keymax;
   }
 
   if (min->size > sizeof keydata)
-    log_errx(1, "%s: min key size is %zu and exceeds %lu", __func__, min->size, MAXKEYSIZE);
+    errx(1, "%s: min key size is %zu and exceeds %lu", __func__, min->size, MAXKEYSIZE);
 
   /* seek to value that must be iterated first */
   if (reverse) {
@@ -1133,7 +1133,7 @@ iterate(const DBT *min, int gte, const DBT *max, int lte, size_t limit, size_t s
 
   /* setting the cursor always ascends to the first match on prefix */
   if ((r2 = idx->seq(idx, &key, NULL, R_CURSOR)) == -1)
-    log_err(1, "%s: idx->seq set cursor", __func__);
+    err(1, "%s: idx->seq set cursor", __func__);
 
   /* set cursor to the first valid item, if any */
   if (reverse) {
@@ -1156,7 +1156,7 @@ iterate(const DBT *min, int gte, const DBT *max, int lte, size_t limit, size_t s
     } else {
       /* in all other cases find next */
       if ((r2 = idx->seq(idx, &key, NULL, dir)) == -1) {
-        log_err(1, "%s: idx-> prev before max log_error", __func__);
+        err(1, "%s: idx-> prev before max log_error", __func__);
       } else if (r2 == 1) {
         log_warnx("%s: idx->seq prev before max not found", __func__);
         return;
@@ -1187,7 +1187,7 @@ iterate(const DBT *min, int gte, const DBT *max, int lte, size_t limit, size_t s
     if (!includebound && bound->size == key.size && memcmp(bound->data, key.data, key.size) == 0) {
       /* key matches exactly with min, fetch next */
       if ((r2 = idx->seq(idx, &key, NULL, dir)) == -1) {
-        log_err(1, "%s: min next log_error", __func__);
+        err(1, "%s: min next log_error", __func__);
       } else if (r2 == 1) {
         log_warnx("%s: idx->seq next after min not found", __func__);
         return;
@@ -1239,9 +1239,9 @@ iterate(const DBT *min, int gte, const DBT *max, int lte, size_t limit, size_t s
     }
   } while (proceed == 1 && (r = idx->seq(idx, &key, NULL, dir)) == 0);
   if (r == -1)
-    log_err(1, "%s: idx->seq log_error", __func__);
+    err(1, "%s: idx->seq log_error", __func__);
   if (proceed == -1)
-    log_err(1, "%s: cb log_error", __func__);
+    err(1, "%s: cb log_error", __func__);
 
   if (linr && last_seen != NULL)
     *last_seen = idx_copy_key(&key);
@@ -1260,10 +1260,10 @@ project_exists(const char *name)
   char data[100];
 
   if (pkey_make(&key, data, sizeof data, name, strlen(name), 0, 0) != 0)
-    log_errx(1, "%s: pkey_make", __func__);
+    errx(1, "%s: pkey_make", __func__);
 
   if ((r = idx->seq(idx, &key, &val, R_CURSOR)) == -1)
-    log_err(1, "%s: idx->seq set cursor", __func__);
+    err(1, "%s: idx->seq set cursor", __func__);
 
   if (r == 1)
     return 1;
@@ -1289,7 +1289,7 @@ ensure_project_exists(const char name[MAXPROJ])
   // create directory
   if (mkdirat(datapath.fd, name, 0755) == -1)
     if (errno != EEXIST)
-      log_err(1, "%s: mkdirat", __func__);
+      err(1, "%s: mkdirat", __func__);
 
   return 0;
 }
@@ -1309,11 +1309,11 @@ make_filename(char *dst, const time_t start, const time_t end, size_t dstlen)
 
   fp = dst;
   if (timetostr(fp, start, dstlen - (fp - dst)))
-    log_errx(1, "%s: timetostr 1", __func__);
+    errx(1, "%s: timetostr 1", __func__);
   fp += 14;
   *fp++ = '_';
   if (timetostr(fp, end, dstlen - (fp - dst)))
-    log_errx(1, "%s: timetostr 2", __func__);
+    errx(1, "%s: timetostr 2", __func__);
   fp += 14;
   *fp++ = '\0';
 
@@ -1365,18 +1365,18 @@ idx_del_by_key(const DBT *key)
 
   // remove the file
   if ((fd = openat(datapath.fd, proj, O_RDONLY)) == -1)
-    log_err(1, "%s: openat", __func__);
+    err(1, "%s: openat", __func__);
   if (unlinkat(fd, fname, 0) == -1)
-    log_err(1, "%s: unlinkat: %s/%s", __func__, proj, fname);
+    err(1, "%s: unlinkat: %s/%s", __func__, proj, fname);
   if (close(fd) == -1)
-    log_err(1, "%s: close", __func__);
+    err(1, "%s: close", __func__);
   if (unlinkat(datapath.fd, proj, AT_REMOVEDIR) == -1)
     if (errno != ENOTEMPTY)
-      log_err(1, "%s: unlinkat: %s", __func__, proj);
+      err(1, "%s: unlinkat: %s", __func__, proj);
 
   if (is_d(key)) {
     if (dtopkey(&okey, okeydata, key, sizeof okeydata) == -1)
-      log_errx(1, "%s: dtopkey", __func__);
+      errx(1, "%s: dtopkey", __func__);
 
     if (idx_del(key, &okey) != 0) {
       log_warnx("%s: idx_del", __func__);
@@ -1384,14 +1384,14 @@ idx_del_by_key(const DBT *key)
     }
   } else if (is_p(key)) {
     if (ptodkey(&okey, okeydata, key, sizeof okeydata) == -1)
-      log_errx(1, "%s: dtopkey", __func__);
+      errx(1, "%s: dtopkey", __func__);
 
     if (idx_del(&okey, key) != 0) {
       log_warnx("%s: idx_del", __func__);
       return -1;
     }
   } else {
-    log_errx(1, "%s: illegal key", __func__);
+    errx(1, "%s: illegal key", __func__);
   }
   idx->sync(idx, 0);
 
@@ -1435,11 +1435,11 @@ idx_save_project_file(const entryl_t *el, const DBT *key, DBT **pkey, DBT **dkey
 
   // move the file
   if ((fd = openat(datapath.fd, el->proj, O_RDONLY)) == -1)
-    log_err(1, "%s: openat", __func__);
+    err(1, "%s: openat", __func__);
   if (renameat(datapath.fd, el->fname, fd, fname) == -1)
-    log_err(1, "%s: renameat: %s", __func__, el->fname);
+    err(1, "%s: renameat: %s", __func__, el->fname);
   if (close(fd) == -1)
-    log_err(1, "%s: close", __func__);
+    err(1, "%s: close", __func__);
 
   if (idx_put(el->proj, fname, pkey, dkey) != 0) {
     log_warnx("%s: idx_put", __func__);
@@ -1457,10 +1457,10 @@ idx_read_project_file(char *dst, size_t dstsize, const DBT *key)
   size_t n;
 
   if ((pf = idx_open_project_file(key)) == NULL)
-    log_err(1, "%s: idx_open_project_file", __func__);
+    err(1, "%s: idx_open_project_file", __func__);
 
   if ((n = fread(dst, 1, dstsize, pf)) == 0)
-    log_err(1, "%s: fread", __func__);
+    err(1, "%s: fread", __func__);
 
   /* try to add a trailing null, or replace last character with a null */
   if (n <= dstsize - 1)
@@ -1487,14 +1487,14 @@ idx_open_project_file(const DBT *key)
   char pname[PATH_MAX], *pp;
 
   if (key_within_bounds(key) != 0)
-    log_err(1, "%s: key out of bounds", __func__);
+    err(1, "%s: key out of bounds", __func__);
 
   if (datapath.len + key->size + (29 - 2 * sizeof(uint32_t)) >= sizeof pname)
-    log_errx(1, "%s: path does not fit", __func__);
+    errx(1, "%s: path does not fit", __func__);
 
   pp = pname;
   if ((offset = strlcpy(pp, datapath.str, sizeof pname)) > sizeof pname)
-    log_err(1, "%s: can't copy path", __func__);
+    err(1, "%s: can't copy path", __func__);
   pp += offset;
 
   projlen = proj_len(key);
@@ -1505,7 +1505,7 @@ idx_open_project_file(const DBT *key)
   *pp++ = '/';
   // append filename
   if (make_filename(pp, idx_key_start(key), idx_key_end(key), sizeof pname - (pp - pname)) == -1)
-    log_errx(1, "%s: timetostr failed", __func__);
+    errx(1, "%s: timetostr failed", __func__);
 
   // open the file
   return fopen(pname, "r");
@@ -1539,15 +1539,15 @@ idx_put(const char proj[MAXPROJ], char *file, DBT **pkey, DBT **dkey)
   filelen = strlen(file);
 
   if (projlen > MAXPROJ)
-    log_errx(1, "%s: project name too long: %d > %d. \"%s\"", __func__, projlen, MAXPROJ, proj);
+    errx(1, "%s: project name too long: %d > %d. \"%s\"", __func__, projlen, MAXPROJ, proj);
   if (projlen < 1)
-    log_errx(1, "%s: project name too short: %d < 1. \"%s\"", __func__, projlen, proj);
+    errx(1, "%s: project name too short: %d < 1. \"%s\"", __func__, projlen, proj);
   if (filelen != 29)
-    log_errx(1, "%s: illegal filename: %s", __func__, file);
+    errx(1, "%s: illegal filename: %s", __func__, file);
 
   // determine start time
   if (strptime(file, "%Y%m%dT%H%MZ", &dt) == NULL)
-    log_errx(1, "%s: could not parse start calendar time from filename: %s", __func__, file);
+    errx(1, "%s: could not parse start calendar time from filename: %s", __func__, file);
 
   // clear values that are not in the above time spec
   dt.tm_sec = 0;
@@ -1558,7 +1558,7 @@ idx_put(const char proj[MAXPROJ], char *file, DBT **pkey, DBT **dkey)
 
   // determine end time
   if (strptime(file + 14 + 1, "%Y%m%dT%H%MZ", &dt) == NULL)
-    log_errx(1, "%s: could not parse end calendar time from filename: %s", __func__, file);
+    errx(1, "%s: could not parse end calendar time from filename: %s", __func__, file);
 
   // clear values that are not in the above time spec
   dt.tm_sec = 0;
@@ -1571,14 +1571,14 @@ idx_put(const char proj[MAXPROJ], char *file, DBT **pkey, DBT **dkey)
   ////////////////////
 
   if (pkey_make(&pk, keydata, sizeof keydata, proj, projlen, start, end) == -1)
-    log_errx(1, "%s: pkey_make", __func__);
+    errx(1, "%s: pkey_make", __func__);
 
   /* P. value */
   dk.data = NULL;
   dk.size = 0;
 
   if ((r = idx->put(idx, &pk, &dk, R_NOOVERWRITE)) == -1)
-    log_err(1, "%s: put pk", __func__);
+    err(1, "%s: put pk", __func__);
   if (r == 1)
     log_warnx("%s: duplicate pk %s/%s", __func__, proj, file);
 
@@ -1589,14 +1589,14 @@ idx_put(const char proj[MAXPROJ], char *file, DBT **pkey, DBT **dkey)
   /////////////////
 
   if (dkey_make(&dk, keydata, sizeof keydata, proj, projlen, start, end) == -1)
-    log_errx(1, "%s: dkey_make", __func__);
+    errx(1, "%s: dkey_make", __func__);
 
   /* D. value */
   pk.data = NULL;
   pk.size = 0;
 
   if ((r = idx->put(idx, &dk, &pk, R_NOOVERWRITE)) == -1)
-    log_err(1, "%s: put dk", __func__);
+    err(1, "%s: put dk", __func__);
   if (r == 1)
     log_warnx("%s: duplicate dk %s/%s", __func__, proj, file);
 
@@ -1619,14 +1619,14 @@ idx_del(const DBT *dkey, const DBT *pkey)
   int r;
 
   if ((r = idx->del(idx, dkey, 0)) == -1)
-    log_err(1, "%s: del dkey", __func__);
+    err(1, "%s: del dkey", __func__);
   if (r == 1) {
     log_warnx("%s: dkey not found %s", __func__, dkey_proj(dkey));
     return -1;
   }
 
   if ((r = idx->del(idx, pkey, 0)) == -1)
-    log_err(1, "%s: del pkey", __func__);
+    err(1, "%s: del pkey", __func__);
   if (r == 1) {
     log_warnx("%s: pkey not found %s", __func__, dkey_proj(dkey));
     return -1;

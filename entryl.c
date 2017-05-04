@@ -24,23 +24,23 @@ entryl_str(WINDOW *w, char *dst, size_t dstsize, const char *label, const char *
   form = create_str_form(label, dstsize, def);
 
   if ((sw = derwin(w, 0, 0, 0, 0)) == NULL)
-    log_errx(1, "%s: derwin", __func__);
+    errx(1, "%s: derwin", __func__);
   if (keypad(sw, TRUE) == ERR)
-    log_errx(1, "%s: keypad", __func__);
+    errx(1, "%s: keypad", __func__);
 
   if (set_form_win(form, w) != E_OK)
-    log_errx(1, "%s: set_form_win", __func__);
+    errx(1, "%s: set_form_win", __func__);
   if (set_form_sub(form, sw) != E_OK)
-    log_errx(1, "%s: set_form_sub", __func__);
+    errx(1, "%s: set_form_sub", __func__);
   if (post_form(form) != E_OK)
-    log_errx(1, "%s: post_form", __func__);
+    errx(1, "%s: post_form", __func__);
 
   /* start at first input */
   if (form_driver(form, REQ_FIRST_FIELD) != E_OK)
-    log_errx(1, "%s: form_driver", __func__);
+    errx(1, "%s: form_driver", __func__);
 
   if ((fp = current_field(form)) == NULL)
-    log_errx(1, "%s: current_field", __func__);
+    errx(1, "%s: current_field", __func__);
 
   ret = fetch(sw, form, fp, tab_proj);
   switch (ret) {
@@ -61,11 +61,11 @@ entryl_str(WINDOW *w, char *dst, size_t dstsize, const char *label, const char *
   }
 
   if (unpost_form(form) != E_OK)
-    log_errx(1, "%s: unpost_form", __func__);
+    errx(1, "%s: unpost_form", __func__);
   destroy_form(&form);
 
   if (delwin(sw) == ERR)
-    log_errx(1, "%s: delwin", __func__);
+    errx(1, "%s: delwin", __func__);
 
   return ret;
 }
@@ -85,20 +85,20 @@ entryl_date(WINDOW *w, time_t *res, const char *label, time_t def)
   form = create_date_form(label, def);
 
   if ((sw = derwin(w, 0, 0, 0, 0)) == NULL)
-    log_errx(1, "%s: derwin", __func__);
+    errx(1, "%s: derwin", __func__);
   if (keypad(sw, TRUE) == ERR)
-    log_errx(1, "%s: keypad", __func__);
+    errx(1, "%s: keypad", __func__);
 
   if (set_form_win(form, w) != E_OK)
-    log_errx(1, "%s: set_form_win", __func__);
+    errx(1, "%s: set_form_win", __func__);
   if (set_form_sub(form, sw) != E_OK)
-    log_errx(1, "%s: set_form_sub", __func__);
+    errx(1, "%s: set_form_sub", __func__);
   if (post_form(form) != E_OK)
-    log_errx(1, "%s: post_form", __func__);
+    errx(1, "%s: post_form", __func__);
 
   /* start at first input */
   if (form_driver(form, REQ_FIRST_FIELD) != E_OK)
-    log_errx(1, "%s: form_driver", __func__);
+    errx(1, "%s: form_driver", __func__);
 
   ret = fetch(sw, form, NULL, NULL);
   switch (ret) {
@@ -119,11 +119,11 @@ entryl_date(WINDOW *w, time_t *res, const char *label, time_t def)
   }
 
   if (unpost_form(form) != E_OK)
-    log_errx(1, "%s: unpost_form", __func__);
+    errx(1, "%s: unpost_form", __func__);
   destroy_form(&form);
 
   if (delwin(sw) == ERR)
-    log_errx(1, "%s: delwin", __func__);
+    errx(1, "%s: delwin", __func__);
 
   return ret;
 }
@@ -153,12 +153,12 @@ entryl(entryl_t *el, size_t line, const char *proj, const char **tab_proj, const
   ret = LSAVE;
 
   if ((w = newwin(1, 0, line, 0)) == NULL)
-    log_errx(1, "%s: newwin", __func__);
+    errx(1, "%s: newwin", __func__);
 
   /* project */
   switch (entryl_str(w, el->proj, sizeof el->proj, "Project:", proj, tab_proj)) {
   case -1:
-    log_errx(1, "%s: entryl_str", __func__);
+    errx(1, "%s: entryl_str", __func__);
   case 1:
     ret = LCANCEL;
     goto exit;
@@ -177,7 +177,7 @@ entryl(entryl_t *el, size_t line, const char *proj, const char **tab_proj, const
   /* start date */
   switch (entryl_date(w, &el->start, "Start:", start)) {
   case -1:
-    log_errx(1, "%s: entryl_date start", __func__);
+    errx(1, "%s: entryl_date start", __func__);
   case 1:
     ret = LCANCEL;
     goto exit;
@@ -186,7 +186,7 @@ entryl(entryl_t *el, size_t line, const char *proj, const char **tab_proj, const
   /* end date */
   switch (entryl_date(w, &el->end, "End:  ", max(end, el->start))) {
   case -1:
-    log_errx(1, "%s: entryl_date end", __func__);
+    errx(1, "%s: entryl_date end", __func__);
   case 1:
     ret = LCANCEL;
     goto exit;
@@ -202,7 +202,7 @@ entryl(entryl_t *el, size_t line, const char *proj, const char **tab_proj, const
     goto exit;
 
   if (snprintf(pname, sizeof pname, "%s/%s", dataroot, fname) >= sizeof pname)
-    log_errx(1, "%s: snprintf", __func__);
+    errx(1, "%s: snprintf", __func__);
 
   /* description */
   switch(spawn_editor(pname)) {
@@ -215,11 +215,11 @@ entryl(entryl_t *el, size_t line, const char *proj, const char **tab_proj, const
   }
 
   if (strlcpy(el->fname, fname, sizeof el->fname) > sizeof el->fname)
-    log_err(1, "%s: strlcpy fname", __func__);
+    err(1, "%s: strlcpy fname", __func__);
 
 exit:
   if (delwin(w) == ERR)
-    log_errx(1, "%s: delwin", __func__);
+    errx(1, "%s: delwin", __func__);
 
   return ret;
 }
@@ -239,7 +239,7 @@ create_str_form(const char *label, size_t inpsize, const char *def)
   llen = strlen(label);
 
   if ((fields = calloc(3, sizeof(FIELD *))) == NULL)
-    log_err(1, "%s: calloc", __func__);
+    err(1, "%s: calloc", __func__);
 
   fields[0] = new_field(1, llen, 0, 0, 0, 0);
   fields[1] = new_field(1, inpsize, 0, llen += 1, 0, 1); /* input */
@@ -247,19 +247,19 @@ create_str_form(const char *label, size_t inpsize, const char *def)
 
   /* set labels */
   if (field_opts_off(fields[0], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 0", __func__);
+    errx(1, "%s: field_opts_off 0", __func__);
 
   if (set_field_back(fields[1], A_UNDERLINE) != E_OK)
-    log_errx(1, "%s: set_field_back", __func__);
+    errx(1, "%s: set_field_back", __func__);
 
   if (set_field_buffer(fields[0], 0, label) != E_OK)
-    log_errx(1, "%s: set_field_buffer label", __func__);
+    errx(1, "%s: set_field_buffer label", __func__);
 
   if (def && set_field_buffer(fields[1], 0, def) != E_OK)
-    log_errx(1, "%s: set_field_buffer def", __func__);
+    errx(1, "%s: set_field_buffer def", __func__);
 
   if ((form = new_form(fields)) == NULL)
-    log_err(1, "%s: new_form", __func__);
+    err(1, "%s: new_form", __func__);
 
   return form;
 }
@@ -283,7 +283,7 @@ create_date_form(const char *label, const time_t def)
   llen = strlen(label);
 
   if ((fields = calloc(10, sizeof(FIELD *))) == NULL)
-    log_err(1, "%s: calloc", __func__);
+    err(1, "%s: calloc", __func__);
 
   fields[0] = new_field(1, llen, 0, 0, 0, 0);
   fields[1] = new_field(1, 2, 0, llen += 1, 0, 0); /* hour */
@@ -308,34 +308,34 @@ create_date_form(const char *label, const time_t def)
   bdt = localtime(&def);
 
   if (strftime(tmp, sizeof tmp, "%H", bdt) == 0)
-    log_errx(1, "%s: strftime H", __func__);
+    errx(1, "%s: strftime H", __func__);
   set_field_buffer(fields[1], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%M", bdt) == 0)
-    log_errx(1, "%s: strftime M", __func__);
+    errx(1, "%s: strftime M", __func__);
   set_field_buffer(fields[3], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%d", bdt) == 0)
-    log_errx(1, "%s: strftime d", __func__);
+    errx(1, "%s: strftime d", __func__);
   set_field_buffer(fields[4], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%m", bdt) == 0)
-    log_errx(1, "%s: strftime m", __func__);
+    errx(1, "%s: strftime m", __func__);
   set_field_buffer(fields[6], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%Y", bdt) == 0)
-    log_errx(1, "%s: strftime Y", __func__);
+    errx(1, "%s: strftime Y", __func__);
   set_field_buffer(fields[8], 0, tmp);
 
   /* set labels */
   if (field_opts_off(fields[0], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 0", __func__);
+    errx(1, "%s: field_opts_off 0", __func__);
   if (field_opts_off(fields[2], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 2", __func__);
+    errx(1, "%s: field_opts_off 2", __func__);
   if (field_opts_off(fields[5], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 5", __func__);
+    errx(1, "%s: field_opts_off 5", __func__);
   if (field_opts_off(fields[7], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 7", __func__);
+    errx(1, "%s: field_opts_off 7", __func__);
 
   set_field_buffer(fields[0], 0, label);
   set_field_buffer(fields[2], 0, ":");
@@ -343,7 +343,7 @@ create_date_form(const char *label, const time_t def)
   set_field_buffer(fields[7], 0, "-");
 
   if ((form = new_form(fields)) == NULL)
-    log_err(1, "%s: new_form", __func__);
+    err(1, "%s: new_form", __func__);
 
   return form;
 }
@@ -360,16 +360,16 @@ destroy_form(FORM **form)
   FIELD **fp;
   
   if ((fp = form_fields(*form)) == NULL)
-    log_errx(1, "%s: form_fields", __func__);
+    errx(1, "%s: form_fields", __func__);
 
   if (free_form(*form) != E_OK)
-    log_errx(1, "%s: free_form", __func__);
+    errx(1, "%s: free_form", __func__);
   *form = NULL;
 
   i = 0;
   while (fp[i]) {
     if (free_field(fp[i]) != E_OK)
-      log_errx(1, "%s: free_field %d", __func__, i);
+      errx(1, "%s: free_field %d", __func__, i);
     fp[i] = NULL;
     i++;
   }
@@ -424,7 +424,7 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
     case '\t':
       /* make sure buffer of current field is saved */
       if (form_driver(form, REQ_VALIDATION) != E_OK)
-        log_errx(1, "%s: \\t save current buffer", __func__);
+        errx(1, "%s: \\t save current buffer", __func__);
 
       /* if this field needs to be completed, show the next option */
       if (current_field(form) == complf) {
@@ -433,7 +433,7 @@ fetch(WINDOW *w, FORM *form, FIELD *complf, const char **compll)
           tabval = strdup(field_buffer(complf, 0));
           rtrim(tabval);
           if (prefix_match(&complo, compll, tabval) != 0)
-            log_errx(1, "%s: prefix_match", __func__);
+            errx(1, "%s: prefix_match", __func__);
           comploi = 0;
 
           /* set aside the user typed part */
@@ -513,13 +513,13 @@ spawn_editor(const char *pname)
     editor = "vi";
 
   if ((pid = fork()) < 0) {
-    log_err(1, "%s: fork", __func__);
+    err(1, "%s: fork", __func__);
   } else if (pid == 0) {
     execlp(editor, editor, pname, (char *)NULL);
-    log_err(1, "%s: execlp", __func__);
+    err(1, "%s: execlp", __func__);
   } else {
     if (wait(&status) < 0)
-      log_err(1, "%s: wait", __func__);
+      err(1, "%s: wait", __func__);
 
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
       log_warnx("%s: editor \"%s\" no clean exit", __func__, editor);

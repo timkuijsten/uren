@@ -79,13 +79,13 @@ vp_init(char *dp)
 
   initscr();
   if (atexit((void (*)(void))endwin) != 0)
-    log_errx(1, "%s: can't register endwin", __func__);
+    errx(1, "%s: can't register endwin", __func__);
   scrollok(stdscr, TRUE);
   noecho();
 
   ensure_key_storage();
   if (calc_status_line(&ecount, &mtotal) != 0)
-    log_errx(1, "%s: calc_status_line", __func__);
+    errx(1, "%s: calc_status_line", __func__);
 
   // fetch new keys and move them to nkeys
   vp_mv_bottom();
@@ -131,42 +131,42 @@ vp_start(void)
       break;
     case 2: // ctrl-B, scroll a full screen up minus two items
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: ^B use_count", __func__);
+        errx(1, "%s: ^B use_count", __func__);
       if (i == 1)
         count = 1;
       move_lines(-1 * count * e_lines - 2);
       break;
     case 5: // ctrl-E
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: ^E use_count", __func__);
+        errx(1, "%s: ^E use_count", __func__);
       if (i == 1)
         count = 1;
       move_lines(count);
       break;
     case 6: // ctrl-F, scroll a full screen down minus two items
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: ^F use_count", __func__);
+        errx(1, "%s: ^F use_count", __func__);
       if (i == 1)
         count = 1;
       move_lines(count * e_lines - 2);
       break;
     case 4: // ctrl-D, scroll half the screen down
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: ^D use_count", __func__);
+        errx(1, "%s: ^D use_count", __func__);
       if (i == 1)
         count = 1;
       move_lines(count * e_lines / 2);
       break;
     case 21: // ctrl-U, scroll half the screen up
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: ^U use_count", __func__);
+        errx(1, "%s: ^U use_count", __func__);
       if (i == 1)
         count = 1;
       move_lines(-1 * count * e_lines / 2);
       break;
     case 25: // ctrl-Y
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: ^Y use_count", __func__);
+        errx(1, "%s: ^Y use_count", __func__);
       if (i == 1)
         count = 1;
       move_lines(-1 * count);
@@ -185,14 +185,14 @@ vp_start(void)
       break;
     case 'k':
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: j use_count", __func__);
+        errx(1, "%s: j use_count", __func__);
       if (i == 1)
         count = 1;
       cur_mv_up(count);
       break;
     case 'j':
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: j use_count", __func__);
+        errx(1, "%s: j use_count", __func__);
       if (i == 1)
         count = 1;
       cur_mv_down(count);
@@ -208,7 +208,7 @@ vp_start(void)
       break;
     case 'H':
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: j use_count", __func__);
+        errx(1, "%s: j use_count", __func__);
       if (i == 1)
         count = 1;
       cur_mv_line(count - 1);
@@ -218,7 +218,7 @@ vp_start(void)
       break;
     case 'L':
       if ((i = use_count(&count, countstr)) == -1)
-        log_errx(1, "%s: j use_count", __func__);
+        errx(1, "%s: j use_count", __func__);
       if (i == 1)
         count = 1;
       cur_mv_line(e_lines - count);
@@ -230,7 +230,7 @@ vp_start(void)
     case 'I':
       add_entry_before(cur_get_key());
       if (calc_status_line(&ecount, &mtotal) != 0)
-        log_errx(1, "%s: calc_status_line", __func__);
+        errx(1, "%s: calc_status_line", __func__);
       break;
     case 'i': /* alias for G + o */
       vp_mv_bottom();
@@ -238,7 +238,7 @@ vp_start(void)
     case 'o':
       add_entry_after(cur_get_key());
       if (calc_status_line(&ecount, &mtotal) != 0)
-        log_errx(1, "%s: calc_status_line", __func__);
+        errx(1, "%s: calc_status_line", __func__);
       break;
     case 's':
       timer_toggle();
@@ -296,14 +296,14 @@ static void
 enable_filter(char *proj, time_t start, time_t end)
 {
   if (strlcpy(gfilter.proj, proj, sizeof gfilter.proj) > sizeof gfilter.proj)
-    log_errx(1, "%s: strlcpy", __func__);
+    errx(1, "%s: strlcpy", __func__);
   gfilter.start = start;
   gfilter.end = end;
   gfilter.fname[0] = 1;
 
   reload_scr(NULL);
   if (calc_status_line(&ecount, &mtotal) != 0)
-    log_errx(1, "%s: calc_status_line", __func__);
+    errx(1, "%s: calc_status_line", __func__);
 }
 
 static void
@@ -314,7 +314,7 @@ disable_filter(void)
 
   reload_scr(NULL);
   if (calc_status_line(&ecount, &mtotal) != 0)
-    log_errx(1, "%s: calc_status_line", __func__);
+    errx(1, "%s: calc_status_line", __func__);
 }
 
 /* return 1 if filter is active, 0 if not */
@@ -332,7 +332,7 @@ timer_started(void)
   char pname[PATH_MAX];
 
   if (snprintf(pname, sizeof pname, "%s/%s", datapath, tfile) >= sizeof pname)
-    log_errx(1, "%s: snprintf", __func__);
+    errx(1, "%s: snprintf", __func__);
 
   if (stat(pname, &st) == -1) {
     if (errno == ENOENT)
@@ -342,7 +342,7 @@ timer_started(void)
   }
 
   if (st.st_ctime > time(NULL))
-    log_errx(1, "%s: time is in the future %d", __func__, st.st_ctime);
+    errx(1, "%s: time is in the future %ld", __func__, st.st_ctime);
 
   return st.st_ctime;
 }
@@ -356,18 +356,18 @@ timer_start(void)
   char pname[PATH_MAX];
 
   if (snprintf(pname, sizeof pname, "%s/%s", datapath, tfile) >= sizeof pname)
-    log_errx(1, "%s: snprintf", __func__);
+    errx(1, "%s: snprintf", __func__);
 
   if ((fd = open(pname, O_CREAT | O_EXCL, 0600)) == -1) {
     if (errno != EEXIST)
-      log_err(1, "%s: open", __func__);
+      err(1, "%s: open", __func__);
     else {
       /* timer already running */
       return -1;
     }
   }
   if (close(fd) == -1)
-    log_err(1, "%s: close", __func__);
+    err(1, "%s: close", __func__);
 
   return 0;
 }
@@ -386,7 +386,7 @@ timer_stop(void)
   char pname[PATH_MAX];
 
   if (snprintf(pname, sizeof pname, "%s/%s", datapath, tfile) >= sizeof pname)
-    log_errx(1, "%s: snprintf", __func__);
+    errx(1, "%s: snprintf", __func__);
 
   s = timer_started();
 
@@ -394,7 +394,7 @@ timer_stop(void)
     if (errno == ENOENT && s == 0)
       return 0;
     else
-      log_err(1, "%s: unlink", __func__);
+      err(1, "%s: unlink", __func__);
   }
 
   return s;
@@ -416,14 +416,14 @@ timer_toggle(void)
   s = timer_started();
 
   if (s < 0)
-    log_err(1, "%s: timer_started", __func__);
+    err(1, "%s: timer_started", __func__);
 
   if (!s)
     return timer_start();
 
   /* first update displayed timer */
   if (calc_status_line(&ecount, &mtotal) != 0)
-    log_errx(1, "%s: calc_status_line", __func__);
+    errx(1, "%s: calc_status_line", __func__);
   update_status_line(ecount, mtotal);
 
   switch (entryl(&el, vp_lines - 1, NULL, (const char **)idx_uniq_proj(), s, time(NULL), datapath, ".add", 0)) {
@@ -432,10 +432,10 @@ timer_toggle(void)
     return -1;
   case LSAVE:
     if (idx_save_project_file(&el, NULL, &pkey, &dkey) == -1)
-      log_errx(1, "%s: idx_save_project_file", __func__);
+      errx(1, "%s: idx_save_project_file", __func__);
 
     if (timer_stop() <= 0)
-      log_err(1, "%s: timer_stop", __func__);
+      err(1, "%s: timer_stop", __func__);
 
     /* reload and center around the added entry */
     reload_scr(proj_filter_active() ? pkey : dkey);
@@ -445,7 +445,7 @@ timer_toggle(void)
     idx_free_key((const DBT **)&dkey);
 
     if (calc_status_line(&ecount, &mtotal) != 0)
-      log_errx(1, "%s: calc_status_line", __func__);
+      errx(1, "%s: calc_status_line", __func__);
     break;
   }
 
@@ -473,7 +473,7 @@ add_entry_before(const DBT *ckey)
 
   proj = NULL;
   if ((start = time(NULL)) == -1)
-    log_errx(1, "%s time start", __func__);
+    errx(1, "%s time start", __func__);
   end = 0;
 
   if (ckey) {
@@ -487,7 +487,7 @@ add_entry_before(const DBT *ckey)
     break;
   case LSAVE:
     if (idx_save_project_file(&el, NULL, &pkey, &dkey) == -1)
-      log_errx(1, "%s: idx_save_project_file", __func__);
+      errx(1, "%s: idx_save_project_file", __func__);
 
     /* reload and center around the added entry */
     reload_scr(proj_filter_active() ? pkey : dkey);
@@ -497,7 +497,7 @@ add_entry_before(const DBT *ckey)
     idx_free_key((const DBT **)&dkey);
 
     if (calc_status_line(&ecount, &mtotal) != 0)
-      log_errx(1, "%s: calc_status_line", __func__);
+      errx(1, "%s: calc_status_line", __func__);
     break;
   }
 
@@ -519,7 +519,7 @@ add_entry_after(const DBT *ckey)
   /* get key under the cursor */
   proj = NULL;
   if ((start = time(NULL)) == -1)
-    log_errx(1, "%s time start", __func__);
+    errx(1, "%s time start", __func__);
 
   if (ckey) {
     proj = idx_key_proj(ckey);
@@ -531,7 +531,7 @@ add_entry_after(const DBT *ckey)
     break;
   case LSAVE:
     if (idx_save_project_file(&el, NULL, &pkey, &dkey) == -1)
-      log_errx(1, "%s: idx_save_project_file", __func__);
+      errx(1, "%s: idx_save_project_file", __func__);
 
     /* reload and center around the added entry */
     reload_scr(proj_filter_active() ? pkey : dkey);
@@ -541,7 +541,7 @@ add_entry_after(const DBT *ckey)
     idx_free_key((const DBT **)&dkey);
 
     if (calc_status_line(&ecount, &mtotal) != 0)
-      log_errx(1, "%s: calc_status_line", __func__);
+      errx(1, "%s: calc_status_line", __func__);
     break;
   }
 
@@ -570,11 +570,11 @@ ch_entry(const DBT *key)
   end = idx_key_end(key);
 
   if ((fp = idx_open_project_file(key)) == NULL)
-    log_errx(1, "%s: idx_open_project_file", __func__);
+    errx(1, "%s: idx_open_project_file", __func__);
   if (copy_file(datapath, ".edit", fp) == -1)
-    log_errx(1, "%s: copy_file", __func__);
+    errx(1, "%s: copy_file", __func__);
   if (fclose(fp) == EOF)
-    log_err(1, "%s: fclose", __func__);
+    err(1, "%s: fclose", __func__);
 
   switch (entryl(&el, vp_lines - 1, proj, (const char **)idx_uniq_proj(), start, end, datapath, ".edit", 0)) {
   case LERROR:
@@ -582,7 +582,7 @@ ch_entry(const DBT *key)
     break;
   case LSAVE:
     if (idx_save_project_file(&el, key, NULL, NULL) == -1)
-      log_errx(1, "%s: idx_save_project_file", __func__);
+      errx(1, "%s: idx_save_project_file", __func__);
 
     /* reload and center around the changed entry */
     reload_scr(key);
@@ -590,7 +590,7 @@ ch_entry(const DBT *key)
     cur_mv_key(key);
 
     if (calc_status_line(&ecount, &mtotal) != 0)
-      log_errx(1, "%s: calc_status_line", __func__);
+      errx(1, "%s: calc_status_line", __func__);
     break;
   }
 
@@ -605,7 +605,7 @@ rm_entry(const DBT *key)
     return -1;
 
   if (idx_del_by_key(key) == -1)
-    log_errx(1, "%s: idx_del_by_key", __func__);
+    errx(1, "%s: idx_del_by_key", __func__);
 
   /* reload and center around the deleted entry */
   reload_scr(key);
@@ -613,7 +613,7 @@ rm_entry(const DBT *key)
   move_lines(-1 * e_lines / 2);
 
   if (calc_status_line(&ecount, &mtotal) != 0)
-    log_errx(1, "%s: calc_status_line", __func__);
+    errx(1, "%s: calc_status_line", __func__);
 
   return 0;
 }
@@ -712,34 +712,34 @@ update_status_line(int count, int summ)
 
   getyx(stdscr, y, s);
   if ((s = timer_started()) == -1)
-    log_errx(1, "%s: timer_started", __func__);
+    errx(1, "%s: timer_started", __func__);
 
   if (s) {
     s = time(NULL) - s;
     if (mvprintw(e_lines, 0, " %d                            %2d:%02d    timer: %2d:%02d", count, summ / 60, summ % 60, s / 60, s % 60) == ERR)
-      log_errx(1, "%s: mvprintw", __func__);
+      errx(1, "%s: mvprintw", __func__);
   } else {
     if (mvprintw(e_lines, 0, " %d                            %2d:%02d", count, summ / 60, summ % 60) == ERR)
-      log_errx(1, "%s: mvprintw", __func__);
+      errx(1, "%s: mvprintw", __func__);
   }
 
   if (filter_enabled()) {
     if (printw("\t\t%s\t", gfilter.proj) == ERR)
-      log_errx(1, "%s: printw project", __func__);
+      errx(1, "%s: printw project", __func__);
 
     if (strftime(sdout, sizeof sdout, "%R %d-%m-%Y", localtime(&gfilter.start)) == 0)
-      log_err(1, "%s: could not format broken-down start time", __func__);
+      err(1, "%s: could not format broken-down start time", __func__);
     if (printw("   %s", sdout) == ERR)
-      log_errx(1, "%s: printw start", __func__);
+      errx(1, "%s: printw start", __func__);
 
     if (strftime(sdout, sizeof sdout, "%R %d-%m-%Y", localtime(&gfilter.end)) == 0)
-      log_err(1, "%s: could not format broken-down end time", __func__);
+      err(1, "%s: could not format broken-down end time", __func__);
     if (printw(" - %s", sdout) == ERR)
-      log_errx(1, "%s: printw end", __func__);
+      errx(1, "%s: printw end", __func__);
   }
   clrtoeol();
   if (mvchgat(e_lines, 0, -1, A_REVERSE, 0, NULL) == ERR)
-    log_errx(1, "%s: mvchgat ON", __func__);
+    errx(1, "%s: mvchgat ON", __func__);
   /* clear last line, expect two status lines */
   assert(s_lines == 2);
   move(e_lines + 1, 0);
@@ -784,7 +784,7 @@ ensure_key_storage(void)
   keys.coll = realloc(keys.coll, sizeof(DBT *) * e_lines);
   nkeys.coll = realloc(nkeys.coll, sizeof(DBT *) * e_lines);
   if (keys.coll == NULL || nkeys.coll == NULL)
-    log_err(1, "%s: realloc", __func__);
+    err(1, "%s: realloc", __func__);
 
   keys.size = e_lines;
   nkeys.size = e_lines;
@@ -854,7 +854,7 @@ cur_mv_down(uint32_t mv_lines)
 
   /* set current line to normal */
   if (chgat(-1, A_NORMAL, 0, NULL) == ERR)
-    log_errx(1, "%s: mvchgat OFF", __func__);
+    errx(1, "%s: mvchgat OFF", __func__);
 
   /* highlight new line */
   y += mv_lines;
@@ -864,7 +864,7 @@ cur_mv_down(uint32_t mv_lines)
     y--;
 
   if (mvchgat(y, 0, -1, A_REVERSE, 0, NULL) == ERR)
-    log_errx(1, "%s: mvchgat ON", __func__);
+    errx(1, "%s: mvchgat ON", __func__);
 }
 
 /* move the cursor up */
@@ -884,7 +884,7 @@ cur_mv_up(uint32_t mv_lines)
 
   /* set current line to normal */
   if (chgat(-1, A_NORMAL, 0, NULL) == ERR)
-    log_errx(1, "%s: mvchgat OFF", __func__);
+    errx(1, "%s: mvchgat OFF", __func__);
 
   /* highlight new line */
   y -= mv_lines;
@@ -894,7 +894,7 @@ cur_mv_up(uint32_t mv_lines)
     y--;
 
   if (mvchgat(y, 0, -1, A_REVERSE, 0, NULL) == ERR)
-    log_errx(1, "%s: mvchgat ON", __func__);
+    errx(1, "%s: mvchgat ON", __func__);
 }
 
 /* move to a line relative to the current window */
@@ -1060,10 +1060,10 @@ print_key(int idx)
   time_t end = idx_key_end(key);
 
   if (strftime(sdout, sizeof sdout, "%a %e %b %Y %R", localtime(&start)) == 0)
-    log_err(1, "%s: could not format broken-down start time", __func__);
+    err(1, "%s: could not format broken-down start time", __func__);
 
   if (duration_in_hours(&start, &end, &hours, &minutes) == -1)
-    log_errx(1, "%s: duration calculation error", __func__);
+    errx(1, "%s: duration calculation error", __func__);
 
   // only print enough characters to fill up the screen
   if (vp_cols > sizeof line)
@@ -1075,11 +1075,11 @@ print_key(int idx)
   if (linelen >= 4) {
     /* fetch the first line of the project file */
     if ((pf = idx_open_project_file(key)) == NULL)
-      log_err(1, "%s: log_error opening project file", __func__);
+      err(1, "%s: idx_open_project_file", __func__);
 
     if (fgets(line, sizeof line, pf) == NULL) {
       if (ferror(pf))
-        log_err(1, "%s: fgets", __func__);
+        err(1, "%s: fgets", __func__);
       else
         line[0] = '\0';
     }
@@ -1160,20 +1160,20 @@ copy_file(const char *dataroot, const char *fname, FILE *src)
   ret = 0;
 
   if (snprintf(pname, sizeof pname, "%s/%s", dataroot, fname) >= sizeof pname)
-    log_errx(1, "%s: snprintf", __func__);
+    errx(1, "%s: snprintf", __func__);
 
   if ((fp = fopen(pname, "w")) == NULL)
-    log_err(1, "%s: fopen", __func__);
+    err(1, "%s: fopen", __func__);
 
   while ((c = getc(src)) != EOF)
     if (putc(c, fp) == EOF)
-      log_err(1, "%s: putc", __func__);
+      err(1, "%s: putc", __func__);
 
   if (ferror(src))
     ret = -1;
 
   if (fclose(fp) == EOF)
-    log_err(1, "%s: fclose", __func__);
+    err(1, "%s: fclose", __func__);
 
   return ret;
 }

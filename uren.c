@@ -12,35 +12,35 @@ main(int argc, char *argv[])
   char idxpath[PATH_MAX + 1];
 
   if (isatty(STDIN_FILENO) == 0)
-    log_err(1, "%s: stdin is not connected to a terminal", __func__);
+    err(1, "%s: stdin is not connected to a terminal", __func__);
 
 #ifdef VDSUSP
   struct termios term;
 
   /* enable ^Y */
   if (tcgetattr(STDIN_FILENO, &term) < 0)
-    log_err(1, "%s: tcgetattr", __func__);
+    err(1, "%s: tcgetattr", __func__);
   term.c_cc[VDSUSP] = _POSIX_VDISABLE;
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &term) < 0)
-    log_err(1, "%s: tcsetattr", __func__);
+    err(1, "%s: tcsetattr", __func__);
 #endif
 
   /* make sure MB_CUR_MAX is set */
   if (setlocale(LC_ALL, "") == NULL)
-    log_err(1, "%s: setlocale", __func__);
+    err(1, "%s: setlocale", __func__);
 
   /* check if the current locale uses a state-dependent encoding (not UTF-8, C or POSIX) */
   if (mblen(NULL, MB_CUR_MAX) != 0)
     log_warnx("%s: state-dependent encoding used", __func__);
 
   if (strlcpy(progname, basename(argv[0]), MAXPROG) > MAXPROG)
-    log_errx(1, "%s: program name too long", __func__);
+    errx(1, "%s: program name too long", __func__);
 
   if (argc == 2)
     usage();
 
   if (init_user(&user) < 0)
-    log_errx(1, "%s: can't initialize user", __func__);
+    errx(1, "%s: can't initialize user", __func__);
 
   /* setup datapath */
   if (strlcpy(datapath, user.home, PATH_MAX) >= PATH_MAX)
@@ -60,9 +60,9 @@ main(int argc, char *argv[])
 
   /* ensure index */
   if (idx_open(datapath, idxpath, 0) == -1)
-    log_errx(1, "%s: can't initialize indices", __func__);
+    errx(1, "%s: can't initialize indices", __func__);
   if (atexit(idx_close) != 0)
-    log_errx(1, "%s: can't register idx_close", __func__);
+    errx(1, "%s: can't register idx_close", __func__);
 
   vp_init(datapath);
   return vp_start();

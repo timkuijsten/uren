@@ -23,14 +23,14 @@ rtrim(char *s)
  * resets countstr to the empty string.
  *
  * Return 0 on update, 1 if both count and countstr are not changed and -1 on
- * log_error.
+ * error.
  */
 int
 use_count(size_t *count, char *countstr)
 {
   if (strlen(countstr)) {
     if ((*count = strtoimax(countstr, NULL, 10)) == 0)
-      log_err(1, "%s: strtoimax", __func__);
+      err(1, "%s: strtoimax", __func__);
     countstr[0] = '\0';
     return 0;
   }
@@ -75,34 +75,34 @@ set_date_field(FIELD **field, const char *label, const int col, const int row, c
   bdt = localtime(&def);
 
   if (strftime(tmp, sizeof tmp, "%H", bdt) == 0)
-    log_errx(1, "%s: strftime H", __func__);
+    errx(1, "%s: strftime H", __func__);
   set_field_buffer(field[1], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%M", bdt) == 0)
-    log_errx(1, "%s: strftime M", __func__);
+    errx(1, "%s: strftime M", __func__);
   set_field_buffer(field[3], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%d", bdt) == 0)
-    log_errx(1, "%s: strftime d", __func__);
+    errx(1, "%s: strftime d", __func__);
   set_field_buffer(field[4], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%m", bdt) == 0)
-    log_errx(1, "%s: strftime m", __func__);
+    errx(1, "%s: strftime m", __func__);
   set_field_buffer(field[6], 0, tmp);
 
   if (strftime(tmp, sizeof tmp, "%Y", bdt) == 0)
-    log_errx(1, "%s: strftime Y", __func__);
+    errx(1, "%s: strftime Y", __func__);
   set_field_buffer(field[8], 0, tmp);
 
   /* set labels */
   if (field_opts_off(field[0], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 0", __func__);
+    errx(1, "%s: field_opts_off 0", __func__);
   if (field_opts_off(field[2], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 2", __func__);
+    errx(1, "%s: field_opts_off 2", __func__);
   if (field_opts_off(field[5], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 5", __func__);
+    errx(1, "%s: field_opts_off 5", __func__);
   if (field_opts_off(field[7], O_ACTIVE) != E_OK)
-    log_errx(1, "%s: field_opts_off 7", __func__);
+    errx(1, "%s: field_opts_off 7", __func__);
 
   set_field_buffer(field[0], 0, label);
   set_field_buffer(field[2], 0, ":");
@@ -130,27 +130,27 @@ parse_date_field(FIELD **field, time_t *t)
   char *buf, timestr[12];
 
   if ((buf = field_buffer(field[1], 0)) == NULL) /* hour */
-    log_err(1, "%s: field_buffer 0 hour", __func__);
+    err(1, "%s: field_buffer 0 hour", __func__);
   timestr[i++] = buf[0];
   timestr[i++] = buf[1];
 
   if ((buf = field_buffer(field[3], 0)) == NULL) /* minute */
-    log_err(1, "%s: field_buffer 1 minute", __func__);
+    err(1, "%s: field_buffer 1 minute", __func__);
   timestr[i++] = buf[0];
   timestr[i++] = buf[1];
 
   if ((buf = field_buffer(field[4], 0)) == NULL) /* day */
-    log_err(1, "%s: field_buffer 2 day", __func__);
+    err(1, "%s: field_buffer 2 day", __func__);
   timestr[i++] = buf[0];
   timestr[i++] = buf[1];
 
   if ((buf = field_buffer(field[6], 0)) == NULL) /* month */
-    log_err(1, "%s: field_buffer 3 month", __func__);
+    err(1, "%s: field_buffer 3 month", __func__);
   timestr[i++] = buf[0];
   timestr[i++] = buf[1];
 
   if ((buf = field_buffer(field[8], 0)) == NULL) /* year */
-    log_err(1, "%s: field_buffer 4 year", __func__);
+    err(1, "%s: field_buffer 4 year", __func__);
   timestr[i++] = buf[0];
   timestr[i++] = buf[1];
   timestr[i++] = buf[2];

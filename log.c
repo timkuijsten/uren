@@ -23,27 +23,3 @@ void log_warnx(const char *fmt, ...)
   vwarnx(fmt, ap);
   va_end(ap);
 }
-
-void log_err(int eval, const char *fmt, ...)
-{
-  va_list ap;
-
-  if (!DEBUG)
-    return;
-
-  va_start(ap, fmt);
-  verr(eval, fmt, ap);
-  va_end(ap);
-}
-
-void log_errx(int eval, const char *fmt, ...)
-{
-  va_list ap;
-
-  if (!DEBUG)
-    return;
-
-  va_start(ap, fmt);
-  verrx(eval, fmt, ap);
-  va_end(ap);
-}

@@ -147,7 +147,7 @@ idx_open(char *dp, char *idxpath, int ensure_new)
     err(1, "%s: fcntl", __func__);
 
   if (lock.l_type != F_UNLCK)
-    errx(1, "already started: %d", lock.l_pid);
+    errx(1, "already running: %d", lock.l_pid);
 
   lock.l_type = F_WRLCK;
   if (fcntl(fd, F_SETLK, &lock) == -1)

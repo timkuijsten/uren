@@ -29,7 +29,7 @@ $ sudo make install
 
 ### Build requirements
 
-* C compiler (with reasonable C99 support)
+* C compiler
 * BSD or GNU make
 * ncurses
 * Berkeley DB 1.8x
